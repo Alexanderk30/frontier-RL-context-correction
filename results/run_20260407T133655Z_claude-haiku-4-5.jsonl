@@ -1,0 +1,6 @@
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D0_M_prose", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.47}
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D0_M_block", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.27}
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D1_M_prose", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.25}
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D1_M_block", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.48}
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D3_M_prose", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.43}
+{"scenario": "dependency_version", "model": "claude-haiku-4-5", "condition": "D3_M_block", "trial": 0, "outcome": "exception", "error": "APIConnectionError('Connection error.')", "elapsed_s": 1.36}
