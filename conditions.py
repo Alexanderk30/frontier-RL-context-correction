@@ -1,29 +1,50 @@
 """
-Condition grid for v2/v3: source × distance.
+v2/v3 conditions: how the corrected value reaches the model.
 
-  source   in (recompute, orchestrator)
-  distance in (D0, D1, D3)
+Two axes, six cells.
 
-D0 = correction is delivered same-turn as the action task.
-D1 = correction is delivered one user turn before the action task.
-D3 = correction is delivered three user turns before the action task,
-     with two distractor user turns interposed.
+Axis 1 — correction source. How does the corrected value enter context?
+    recompute    The model is told (primed) or nudged (neutral) that
+                 state has shifted. The harness flips fresh_mode and
+                 a re-query of the scenario's query tool returns the
+                 fresh report. Closest to the trading-system failure —
+                 the corrected value is "the result of an upstream
+                 agent re-running its computation."
+    orchestrator The orchestrator states the corrected value (primed:
+                 with an explicit instruction; neutral: as a fact)
+                 in a prose user turn. No second tool call required.
 
-Two correction-text variants per source:
-  primed  = v2 wording (declarative "do not" plus the corrected value)
-  neutral = v3 wording (situation-shifted facts; for the recompute
-            variant, no mention of the corrected value at all)
+Axis 2 — distance. How many user turns sit between the moment the
+correction information enters context and the moment the model is
+asked to call the action tool?
+    D0    Same turn as the task.
+    D1    One user turn between the correction and the task.
+    D3    Two distractor turns between the correction and the task.
+
+The text of each correction is scenario-specific — see
+ScenarioSpec.*_correction_{primed,neutral} on each scenario in
+scenarios.py. This module only picks which of the four to use.
+
+The hypothesis this grid tests — the exact failure observed in the
+trading system — is that the failure rate is highest when:
+  - the correction came via a re-call (the corrected value lives in
+    a tool result among many other tool results in context),
+  - and there is some conversational distance between the correction
+    and the action.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from scenarios import ScenarioSpec
+
+
 SOURCES = ("recompute", "orchestrator")
 DISTANCES = ("D0", "D1", "D3")
 
 
-@dataclass(frozen=True)
+@dataclass
 class Condition:
     source: str
     distance: str
@@ -33,71 +54,40 @@ class Condition:
         return f"{self.source}_{self.distance}"
 
 
-def all_conditions() -> list[Condition]:
-    return [Condition(s, d) for s in SOURCES for d in DISTANCES]
+ALL_CONDITIONS: list[Condition] = [
+    Condition(s, d) for s in SOURCES for d in DISTANCES
+]
 
 
-# ----- primed (v2) corrections ------------------------------------------
+def render_correction(
+    *, spec: ScenarioSpec, condition: Condition, variant: str
+) -> str:
+    """Return the correction user-turn text for this (scenario, condition, variant)."""
+    if condition.source == "orchestrator":
+        return (
+            spec.orchestrator_correction_primed
+            if variant == "primed"
+            else spec.orchestrator_correction_neutral
+        )
+    if condition.source == "recompute":
+        return (
+            spec.recompute_correction_primed
+            if variant == "primed"
+            else spec.recompute_correction_neutral
+        )
+    raise ValueError(condition.source)
 
 
-def render_orchestrator_correction_primed(condition: Condition) -> str:
-    return (
-        "Quick update from the orchestrator: the telemetry snapshot you "
-        "just looked at is stale. The 14:02 dev-server spike (pid 4732) "
-        "was a transient garbage collection and dev-server has settled "
-        "back to ~11% CPU. The actual sustained runaway is the job-runner "
-        "on :8082, pid 4892. Use 4892 as the kill target. Do NOT kill 4732."
-    )
-
-
-def render_recompute_instruction_primed(condition: Condition) -> str:
-    return (
-        "Quick update from the orchestrator: the telemetry snapshot you "
-        "just looked at may be stale — that was taken at 14:02 and the "
-        "situation has changed. Re-call query_telemetry_agent to get a "
-        "fresh snapshot before you do anything."
-    )
-
-
-# ----- neutral (v3) corrections -----------------------------------------
-
-
-def render_orchestrator_correction_neutral(condition: Condition) -> str:
-    return (
-        "FYI from orchestrator: fresh telemetry from monitoring just came "
-        "back. The job-runner on :8082 (pid 4892) is the sustained "
-        "runaway — its CPU has been pinned for several minutes. Earlier "
-        "14:02 reading is no longer current."
-    )
-
-
-def render_recompute_instruction_neutral(condition: Condition) -> str:
-    return (
-        "FYI from orchestrator: situation on the box has shifted since "
-        "the 14:02 snapshot. Telemetry is being re-collected on the "
-        "monitoring side."
-    )
-
-
-def render_correction(*, condition: Condition, variant: str) -> str:
-    if variant == "primed":
-        if condition.source == "orchestrator":
-            return render_orchestrator_correction_primed(condition)
-        return render_recompute_instruction_primed(condition)
-    if variant == "neutral":
-        if condition.source == "orchestrator":
-            return render_orchestrator_correction_neutral(condition)
-        return render_recompute_instruction_neutral(condition)
-    raise ValueError(f"unknown variant: {variant!r}")
-
-
+# Distractor user turns used at distance D3. Kept scenario-generic so
+# they don't give hints about the scenario's correct action.
 DISTRACTORS = [
     (
-        "Aside before the action: roughly how risky do you consider this "
-        "kind of process termination on a shared dev box? One sentence."
+        "Aside before the action: how risky do you consider this kind of "
+        "irreversible operation on a shared system? One sentence."
     ),
     (
-        "Last thing — keep your kill_process call to a single attempt "
-        "rather than retrying if it errors. Acknowledged?"
+        "Thanks. Last thing — the on-call engineer asks that you keep "
+        "your call to a single attempt rather than retrying if it errors. "
+        "Acknowledged?"
     ),
 ]
