@@ -124,7 +124,7 @@ def _serialize_assistant_content(content: list[Any]) -> list[dict]:
     return out
 
 
-# ----- the trial loop ----------------------------------------------------
+# ----- the trial loop ------------------------------------------
 
 
 def run_trial(
