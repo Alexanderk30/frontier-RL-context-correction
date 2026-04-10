@@ -68,8 +68,8 @@ _CORE_ACK_PATTERNS = [
     re.compile(r"\bno longer current\b", re.I),
     re.compile(r"\bonce\s+(?:you|the)\s+(?:have|fresh|updated|new)\b", re.I),
     re.compile(r"\bget\s+(?:the\s+)?(?:current|latest|new)\s+(?:state|data|snapshot)\b", re.I),
-    re.compile(r"\bcorrection\b", re.I),
-    re.compile(r"\bdisregard(?:ing)?\b", re.I),
+    re.compile(r"\b(?:acknowledged?|registering|noted)\s+(?:the\s+)?(?:correction|update|change)\b", re.I),
+    re.compile(r"\bdisregard(?:ing)?\s+(?:the\s+)?(?:previous|earlier|stale|old|prior)\b", re.I),
     re.compile(r"\bnot the (?:stale|previous|old|earlier)\b", re.I),
     re.compile(r"\bthe (?:earlier|previous|old|stale) (?:report|snapshot|bisect|check|reading)\b", re.I),
 ]

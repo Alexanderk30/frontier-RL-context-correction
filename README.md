@@ -68,7 +68,7 @@ all three scenarios.
 
 Pooled by axis:
 
-- **source**: `recompute` = 43/90 stale (48%); `orchestrator` = 10/81 stale (12%)
+- **source**: `recompute` = 43/90 stale (40%); `orchestrator` = 10/81 stale (12%)
 - **distance**: D0 = 32/60 (53%); D1 = 11/60 (18%); D3 = 10/51 (20%)
 
 Three findings, ranked by confidence:
@@ -81,7 +81,7 @@ Three findings, ranked by confidence:
    is the strongest reproduction — 12/60 ack_but_stale. Sample
    transcripts at the bottom of this README.
 2. **Recompute-sourced corrections fail 4× as often as
-   orchestrator-stated ones**, pooled across scenarios (48% vs. 12%).
+   orchestrator-stated ones**, pooled across scenarios (40% vs. 12%).
    When the corrected value is handed to the model in prose, it
    usually uses it. When the correction is a tool-re-query that the
    model has to initiate itself, it often just doesn't.

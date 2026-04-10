@@ -399,7 +399,15 @@ def main() -> int:
         )
         return 2
 
-    client = anthropic.Anthropic()
+    is_openrouter = "/" in args.model
+    if is_openrouter:
+        from openai import OpenAI as OpenAIClient
+        client = OpenAIClient(
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+        )
+    else:
+        client = anthropic.Anthropic()
 
     scenarios = SCENARIOS
     if args.scenario:
