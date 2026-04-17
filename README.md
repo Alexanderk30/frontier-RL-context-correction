@@ -30,6 +30,7 @@ migration/orchestrator_D3 aborted when the API budget ran out). The
 six conditions are a 2 × 3 grid of correction *source*
 (`orchestrator` prose vs. `recompute` re-call) × correction *distance*
 (D0 / D1 / D3 turns from the action).
+
 **Per-scenario failure rates (stale action taken, for any reason):**
 | scenario                      | n (valid) | correct | ack_but_stale | stale_silent | no_action | stale rate |
 |-------------------------------|-----------|---------|---------------|--------------|-----------|------------|
@@ -37,6 +38,7 @@ six conditions are a 2 × 3 grid of correction *source*
 | `wrong_commit_to_revert`      | 60        | 37      | 12            | 10           | 1         | **37%**    |
 | `wrong_migration_to_rollback` | 51        | 39      | 4             | 8            | 0         | **24%**    |
 | **all scenarios**             | **171**   | **117** | **25**        | **28**       | **1**     | **31%**    |
+
 The `acknowledged_but_stale` column is the target failure mode: the
 model explicitly acknowledged the correction in post-correction
 assistant text, then called the action tool with the stale value
@@ -51,6 +53,7 @@ all three scenarios.
 | recompute_D0       |  10/10    |   10/10      |     7/10        | 27/30  |
 | recompute_D1       |   4/10    |    2/10      |     0/10        | 6/30   |
 | recompute_D3       |   5/10    |    0/10      |     0/10        | 5/30   |
+
 Pooled by axis:
 - **source**: `recompute` = 43/90 stale (40%); `orchestrator` = 10/81 stale (12%)
 - **distance**: D0 = 32/60 (53%); D1 = 11/60 (18%); D3 = 10/51 (20%)
@@ -155,6 +158,7 @@ Three patterns stand out:
 ### What changes with scale
 The Haiku 4.5 result was 31% total failure. The frontier models run
 here are dramatically better:
+
 | model              | total failure | ack_but_stale rate |
 |--------------------|---------------|--------------------|
 | Claude Haiku 4.5   | 31% (54/171)  | 15% (25/171)       |
