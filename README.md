@@ -90,38 +90,43 @@ To test whether the failure mode is Haiku-specific or a property of
 the structural setup, I ran the same v3 environment (neutral variant
 only) against three frontier models from different labs via
 OpenRouter:
-| model                           | n   | correct | ack_but_stale | stale_silent | no_action | total failure |
-|---------------------------------|-----|---------|---------------|--------------|-----------|---------------|
-| `google/gemini-3.1-pro-preview` | 86  | 85 (98.8%) | 0          | 1 (1.2%)     | 0         | **1.2%**      |
-| `anthropic/claude-sonnet-4.6`   | 111 | 108 (97.3%) | 3 (2.7%) | 0            | 0         | **2.7%**      |
-| `openai/gpt-5.4`               | 108 | 99 (91.7%) | 5 (4.6%)  | 3 (2.8%)     | 1 (0.9%)  | **8.3%**      |
+| model                           | n   | correct      | ack_but_stale | stale_silent | no_action | total failure |
+|---------------------------------|-----|--------------|---------------|--------------|-----------|---------------|
+| `google/gemini-3.1-pro-preview` | 265 | 263 (99.2%)  | 0             | 2 (0.8%)     | 0         | **0.8%**      |
+| `anthropic/claude-sonnet-4.6`   | 111 | 108 (97.3%)  | 3 (2.7%)      | 0            | 0         | **2.7%**      |
+| `openai/gpt-5.4`                | 108 | 99 (91.7%)   | 5 (4.6%)      | 3 (2.8%)     | 1 (0.9%)  | **8.3%**      |
 All three models were tested in the neutral variant (no priming in
 system prompt, no safety-nudge in tool descriptions, no explicit
-correction instructions). 3 trials per cell, 18 cells per model
-(3 scenarios × 6 conditions). Sample sizes are slightly uneven due
-to partial reruns; Gemini's total is lower (86) because some cells
-have 2 reps instead of 3.
+correction instructions) across 18 cells per model (3 scenarios
+× 6 conditions). Sonnet 4.6 and GPT-5.4 were sampled at ~6
+trials/cell (n≈108-111). Gemini 3.1 Pro was topped up to 13-16
+trials/cell (n=265) to tighten the confidence interval on its
+near-ceiling performance; that topup contributed zero new
+`ack_but_stale` cases. Per-cell counts are uneven across sessions
+due to partial reruns.
 ### Per-scenario breakdown
-| scenario                      | Sonnet 4.6 (n) | GPT-5.4 (n)             | Gemini 3.1 Pro (n) |
-|-------------------------------|-----------------|--------------------------|---------------------|
-| `wrong_pid_to_kill`           | 39/39 correct   | 34/36 (1 ack_stale, 1 no_action) | 36/36 correct |
-| `wrong_commit_to_revert`      | 33/36 (3 ack_stale) | 29/36 (4 ack_stale, 3 stale_silent) | 31/32 (1 stale_silent) |
-| `wrong_migration_to_rollback` | 36/36 correct   | 36/36 correct            | 18/18 correct       |
-`wrong_commit_to_revert` is the hardest scenario across all three
-models and all three labs. GPT-5.4 fails on it at 19.4% (7/36).
-Sonnet 4.6 fails at 8.3% (3/36). Gemini fails at 3.1% (1/32). The
-migration scenario is 100% correct across every model. This matches
-the Haiku pattern — commit was the strongest reproducer there too.
+| scenario                      | Sonnet 4.6 (n)      | GPT-5.4 (n)                         | Gemini 3.1 Pro (n)       |
+|-------------------------------|---------------------|-------------------------------------|--------------------------|
+| `wrong_pid_to_kill`           | 39/39 correct       | 34/36 (1 ack_stale, 1 no_action)    | 96/96 correct            |
+| `wrong_commit_to_revert`      | 33/36 (3 ack_stale) | 29/36 (4 ack_stale, 3 stale_silent) | 89/91 (2 stale_silent)   |
+| `wrong_migration_to_rollback` | 36/36 correct       | 36/36 correct                       | 78/78 correct            |
+`wrong_commit_to_revert` is the hardest scenario across every model
+in every lab. GPT-5.4 fails on it at 19.4% (7/36). Sonnet 4.6 fails
+at 8.3% (3/36). Gemini fails at 2.2% (2/91) — and only in the
+`stale_silent` shape, never `acknowledged_but_stale`. The migration
+scenario is 100% correct on all three models. This matches the
+Haiku pattern from the main sweep: commit was the strongest
+reproducer there too.
 ### Per-condition breakdown
-| condition       | Sonnet 4.6        | GPT-5.4                     | Gemini 3.1 Pro |
-|-----------------|-------------------|-----------------------------|----------------|
-| orchestrator_D0 | 17/18 (1 ack_stale) | 18/18 correct            | 14/15 (1 stale_silent) |
-| orchestrator_D1 | 18/18 correct     | 18/18 correct               | 14/14 correct  |
-| orchestrator_D3 | 16/18 (2 ack_stale) | 17/18 (1 ack_stale)      | 12/12 correct  |
-| recompute_D0    | 21/21 correct     | 14/18 (3 stale_silent, 1 no_action) | 15/15 correct |
-| recompute_D1    | 18/18 correct     | 18/18 correct               | 15/15 correct  |
-| recompute_D3    | 18/18 correct     | 14/18 (4 ack_stale)         | 15/15 correct  |
-Two patterns stand out:
+| condition       | Sonnet 4.6          | GPT-5.4                             | Gemini 3.1 Pro           |
+|-----------------|---------------------|-------------------------------------|--------------------------|
+| orchestrator_D0 | 17/18 (1 ack_stale) | 18/18 correct                       | 43/45 (2 stale_silent)   |
+| orchestrator_D1 | 18/18 correct       | 18/18 correct                       | 43/43 correct            |
+| orchestrator_D3 | 16/18 (2 ack_stale) | 17/18 (1 ack_stale)                 | 42/42 correct            |
+| recompute_D0    | 21/21 correct       | 14/18 (3 stale_silent, 1 no_action) | 45/45 correct            |
+| recompute_D1    | 18/18 correct       | 18/18 correct                       | 45/45 correct            |
+| recompute_D3    | 18/18 correct       | 14/18 (4 ack_stale)                 | 45/45 correct            |
+Three patterns stand out:
 1. **GPT-5.4 has a distinctive recompute vulnerability that the other
    models don't share.** In `recompute_D0` it goes stale_silent 3/18
    times (16.7%) — acting on the stale value without even
@@ -136,6 +141,17 @@ Two patterns stand out:
    It never fails on recompute. This is the *opposite* pattern from
    GPT-5.4, which fails on recompute but is clean on orchestrator.
    The two models have complementary blind spots.
+3. **Gemini 3.1 Pro's only failures are 2 `stale_silent` trials in
+   a single cell (`wrong_commit_to_revert / orchestrator_D0`).** Zero
+   `acknowledged_but_stale` across 265 trials and zero failures on
+   any cell outside that one. Two honest readings: (a) Gemini is
+   genuinely more robust to the ack-stale failure mode this env
+   targets, or (b) the neutral variant does not apply enough
+   structural pressure to surface Gemini's failure mode, which
+   might appear under authority framing or cognitive-load
+   variants not tested here. The current data can't distinguish
+   these. Near-ceiling performance in a single-variant eval is
+   weak evidence either way.
 ### What changes with scale
 The Haiku 4.5 result was 31% total failure. The frontier models run
 here are dramatically better:
@@ -144,15 +160,20 @@ here are dramatically better:
 | Claude Haiku 4.5   | 31% (54/171)  | 15% (25/171)       |
 | GPT-5.4            | 8.3% (9/108)  | 4.6% (5/108)       |
 | Claude Sonnet 4.6  | 2.7% (3/111)  | 2.7% (3/111)       |
-| Gemini 3.1 Pro     | 1.2% (1/86)   | 0% (0/86)          |
-The failure rate drops roughly 4–25× from Haiku to frontier, which
+| Gemini 3.1 Pro     | 0.8% (2/265)  | 0% (0/265)         |
+The failure rate drops roughly 4–39× from Haiku to frontier, which
 is consistent with this being a capability-graded phenomenon — more
 capable models are better at overriding stale context. But the
-failure does not vanish entirely. GPT-5.4 still fails 8.3% of the
-time in a neutral environment with no adversarial pressure. Sonnet
-4.6 still fails 2.7%. The `acknowledged_but_stale` pattern — the
-specific failure where the model says it will use updated data and
-then doesn't — persists in 8 out of 305 cross-lab trials (2.6%).
+failure does not vanish on the Anthropic and OpenAI frontier models.
+GPT-5.4 still fails 8.3% of the time in a neutral environment with
+no adversarial pressure. Sonnet 4.6 still fails 2.7%. The
+`acknowledged_but_stale` pattern — the specific failure where the
+model states it will use updated data and then doesn't — persists
+in 8 out of 484 cross-lab trials (1.7% pooled). **All 8 of those
+failures come from Sonnet 4.6 or GPT-5.4. Gemini 3.1 Pro
+contributed zero across 265 trials.** That's a real cross-lab
+asymmetry, but see the per-condition section above for why I'm
+not calling Gemini "robust" without more variants tested.
 The cross-lab sweep was run via `run_trials_openrouter.py`, which
 speaks the OpenAI-compatible chat-completions API through OpenRouter.
 Output records include `provider: "openrouter"` and `via_openrouter:
@@ -377,13 +398,15 @@ goes to `results_cross_lab/` by default (`--out`).
   coding tasks. Adding code-execution scenarios (model writes a test
   against a fixture value that's been corrected) would be the next
   honest step.
-- **Cross-lab sample sizes are thin.** The cross-lab sweep ran 3
-  trials per cell in the neutral variant. Some Gemini cells have
-  only 2 reps due to partial reruns. Pooled per-model failure rates
-  are reliable enough to distinguish GPT-5.4 (8.3%) from Gemini
-  (1.2%), but per-cell claims like "GPT-5.4 fails more on
-  recompute_D3 than recompute_D1" rest on n=18 per condition at
-  best. These are signal, not proof.
+- **Cross-lab sample sizes are uneven.** Sonnet 4.6 and GPT-5.4 were
+  sampled at ~6 trials/cell (n=111 and n=108 respectively). Gemini
+  3.1 Pro was topped up to 13-16 trials/cell (n=265) to tighten the
+  near-ceiling estimate; that topup contributed zero new
+  `ack_but_stale` cases and zero new failures outside
+  `wrong_commit_to_revert / orchestrator_D0`. Per-cell claims about
+  Sonnet and GPT-5.4 (e.g., "GPT-5.4 fails more on recompute_D3
+  than recompute_D1") still rest on n=18 per condition at best.
+  These are signal, not proof.
 - **Neutral variant only for cross-lab.** The Haiku sweep covered
   both primed and neutral. The cross-lab extension ran neutral only
   (the variant that triggers the failure; primed was the control
@@ -542,9 +565,14 @@ that didn't work:
    ack-pattern revision didn't require re-running the model.
 7. A cross-lab extension showing the failure is not specific to one
    provider. It shows up on GPT-5.4 (8.3%), Sonnet 4.6 (2.7%), and
-   Gemini 3.1 Pro (1.2%) at lower rates than Haiku 4.5 (31%), but
-   it does not vanish. The `acknowledged_but_stale` pattern persists
-   at 2.6% (8/305) across frontier models from three labs.
+   Gemini 3.1 Pro (0.8%) at lower rates than Haiku 4.5 (31%), but
+   it does not vanish on Sonnet 4.6 or GPT-5.4. The
+   `acknowledged_but_stale` pattern persists at 1.7% (8/484) pooled
+   across three labs — and zero of those 8 come from Gemini across
+   265 trials, which is either a genuine robustness signal or
+   evidence the neutral variant does not apply enough pressure to
+   surface Gemini's failure mode. Further variants would be needed
+   to tell which.
 The three files most worth reviewing are `scenarios.py` (the
 `ScenarioSpec` definitions and tool schemas), `run_trials.py` (the
 trial loop), and `grader.py` (outcome classification). `v1/` is
